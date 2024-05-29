@@ -30,6 +30,7 @@ module Mihari
       shodan_api_key: nil,
       slack_channel: nil,
       slack_webhook_url: nil,
+      silentpush_api_key: nil,
       thehive_api_key: nil,
       thehive_url: nil,
       urlscan_api_key: nil,
