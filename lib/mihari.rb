@@ -194,6 +194,8 @@ require "mihari/enrichers/mmdb"
 require "mihari/enrichers/shodan"
 require "mihari/enrichers/whois"
 
+require "mihari/enrichers/silentpush"
+
 # Models
 require "mihari/models/concerns/searchable"
 
@@ -248,6 +250,8 @@ require "mihari/clients/virustotal"
 require "mihari/clients/whois"
 require "mihari/clients/yeti"
 require "mihari/clients/zoomeye"
+
+require "mihari/clients/silentpush"
 
 # Analyzers
 require "mihari/analyzers/base"

@@ -5,8 +5,8 @@ module Mihari
         #
         class SilentPush < Base
             def initialize(
-                base_url = "https://api.silentpush.com/api/v1/merge-api",
-                key:
+                base_url = "https://api.silentpush.com",
+                key:,
                 headers: {},
                 pagination_interval: Mihari.config.pagination_interval,
                 timeout: nil
@@ -16,6 +16,11 @@ module Mihari
                 raise(ArgumentError, "API key is required") if key.nil?
                 headers["X-API-KEY"] = key
                 super(base_url, headers:, pagination_interval:, timeout:)
+            end
+
+            def query(domain)
+                res=get_json("api/v1/merge-api/explore/enrich/domain/#{domain}")
+                Mihari.logger.info(res)
             end
 
 

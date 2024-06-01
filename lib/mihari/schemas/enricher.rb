@@ -27,6 +27,11 @@ module Mihari
         required(:enricher).value(Types::String.enum(*Mihari::Enrichers::GooglePublicDNS.keys))
         optional(:options).hash(Options)
       end
+
+      SilentPush = Dry::Schema.Params do
+        required(:enricher).value(Types::String.enum(*Mihari::Enrichers::SilentPush.keys))
+        optional(:options).hash(Options)
+      end
     end
 
     Enricher = Schemas::Enrichers.compose_by_or
