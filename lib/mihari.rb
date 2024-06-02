@@ -298,6 +298,8 @@ require "mihari/structs/shodan"
 require "mihari/structs/urlscan"
 require "mihari/structs/virustotal_intelligence"
 
+require "mihari/structs/silentpush"
+
 # Schemas
 require "mihari/schemas/macros"
 require "mihari/schemas/concerns/orrable"

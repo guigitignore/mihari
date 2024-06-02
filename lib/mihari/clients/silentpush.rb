@@ -19,8 +19,7 @@ module Mihari
             end
 
             def query(domain)
-                res=get_json("api/v1/merge-api/explore/enrich/domain/#{domain}")
-                Mihari.logger.info(res)
+                Structs::SilentPush::Response.from_dynamic! get_json("api/v1/merge-api/explore/enrich/domain/#{domain}")
             end
 
 
