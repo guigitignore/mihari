@@ -7,7 +7,7 @@ require "mihari/schemas/enricher"
 module Mihari
   module Schemas
     Rule = Dry::Schema.Params do
-      required(:id).filled(:string)
+      optional(:id).filled(:string).default(SecureRandom.uuid)
       required(:title).filled(:string)
       required(:description).filled(:string)
 

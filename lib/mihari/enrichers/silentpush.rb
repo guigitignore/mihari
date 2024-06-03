@@ -9,7 +9,10 @@ module Mihari
         #
         def call(artifact)
           res = client.query(artifact.data)
-          artifact
+          Mihari.logger.info(res)
+          artifact.tap do |tapped|
+            
+          end
         end
   
         private
