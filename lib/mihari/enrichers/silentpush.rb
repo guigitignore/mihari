@@ -8,21 +8,28 @@ module Mihari
       # @param [Mihari::Models::Artifact] artifact
       #
       def call(artifact)
-        res = client.query(artifact.data)
+        Mihari.logger.info(artifact.inspect)
+
+        res = case artifact.data_type
+        when "domain" then client.query_domain(artifact.data)
+        end
+
         Mihari.logger.info(res.inspect)
 
-        artifact.tap do |tapped|
-          domain_info = res.result&.domain_info
-          if domain_info
-
-            tapped.whois_record ||= Models::WhoisRecord.new(
+        res.result&.domain_info.tap do |domain_info|
+          if domain_info.registrar != "" && domain_info.whois_created_date != ""
+            artifact.whois_record ||= Models::WhoisRecord.new(
               domain: domain_info.domain,
-              registrar: {entity: domain_info.registrar},
-              created_on: Date.parse(domain_info.whois_created_date),
-              updated_on: Date.parse(domain_info.last_seen&.to_s)
+              registrar: {organization: domain_info.registrar},
+              created_on: Date.parse(domain_info.first_seen&.to_s || DateTime.now.to_s),
+              updated_on: Date.parse(domain_info.last_seen&.to_s || DateTime.now.to_s),
+              contacts: {},
+              created_at: DateTime.parse(domain_info.whois_created_date)
             )
           end
         end
+
+        artifact
       end
 
       private

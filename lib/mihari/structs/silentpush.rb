@@ -40,10 +40,6 @@ module Mihari
         #   @return [String]
         attribute :registrar, Types::String
 
-        # @!attribute [r] whois_age
-        #   @return [Integer]
-        attribute :whois_age, Types::Int
-
         # @!attribute [r] whois_created_date
         #   @return [String]
         attribute :whois_created_date, Types::String
@@ -61,16 +57,15 @@ module Mihari
             Mihari.logger.info(d)
 
             new(
-              age: d.fetch("age"),
-              age_score: d.fetch("age_score"),
+              age: d["age"],
+              age_score: d["age_score"],
               domain: d.fetch("domain"),
-              first_seen: d.fetch("first_seen"),
-              is_new: d.fetch("is_new"),
-              is_new_score: d.fetch("is_new_score"),
-              last_seen: d.fetch("last_seen"),
+              first_seen: d["first_seen"],
+              is_new: d["is_new"],
+              is_new_score: d["is_new_score"],
+              last_seen: d["last_seen"],
               query: d.fetch("query"),
               registrar: d.fetch("registrar"),
-              whois_age: d.fetch("whois_age"),
               whois_created_date: d.fetch("whois_created_date"),
               zone: d.fetch("zone")
             )
@@ -80,8 +75,8 @@ module Mihari
 
       class Result < Dry::Struct
         # @!attribute [r] domain_info
-        #   @return [DomainInfo]
-        attribute :domain_info, DomainInfo
+        #   @return [DomainInfo,nil]
+        attribute :domain_info, DomainInfo.optional
 
         class << self
           #
@@ -90,7 +85,7 @@ module Mihari
           def from_dynamic!(d)
             d = Types::Hash[d]
             new(
-              domain_info: DomainInfo.from_dynamic!(d.fetch("domaininfo"))
+              domain_info: DomainInfo.from_dynamic!(d["domaininfo"])
             )
           end
         end
