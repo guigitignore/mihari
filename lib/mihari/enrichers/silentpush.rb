@@ -12,9 +12,8 @@ module Mihari
 
         res = case artifact.data_type
         when "domain" then client.query_domain(artifact.data)
+        when "ip" then client.query_ipv4(artifact.data)
         end
-
-        Mihari.logger.info(res.inspect)
 
         res.result&.domain_info.tap do |domain_info|
           if domain_info.registrar != "" && domain_info.whois_created_date != ""
@@ -39,7 +38,7 @@ module Mihari
       end
 
       def supported_data_types
-        %w[domain]
+        %w[domain ip]
       end
 
       def client

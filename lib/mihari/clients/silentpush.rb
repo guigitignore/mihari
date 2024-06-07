@@ -20,7 +20,13 @@ module Mihari
       # @param domain [String]
       # @return [Structs::SilentPush::Response]
       def query_domain(domain)
-        Structs::SilentPush::Response.from_dynamic! get_json("api/v1/merge-api/explore/enrich/domain/#{domain}")
+        Structs::SilentPush::Response.from_dynamic! get_json("api/v1/merge-api/explore/enrich/domain/#{domain}?explain=1")
+      end
+
+      # @param domain [String]
+      # @return [Structs::SilentPush::Response]
+      def query_ipv4(ipv4)
+        Structs::SilentPush::Response.from_dynamic! get_json("api/v1/merge-api/explore/enrich/ipv4/#{ipv4}?explain=1")
       end
     end
   end

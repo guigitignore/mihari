@@ -53,8 +53,9 @@ module Mihari
           # @param [Hash] d
           #
           def from_dynamic!(d)
+            return d if d.nil?
+
             d = Types::Hash[d]
-            Mihari.logger.info(d)
 
             new(
               age: d["age"],
@@ -110,6 +111,8 @@ module Mihari
           #
           def from_dynamic!(d)
             d = Types::Hash[d]
+            Mihari.logger.info(d.inspect)
+
             new(
               status_code: d.fetch("status_code"),
               error: d.fetch("error"),
