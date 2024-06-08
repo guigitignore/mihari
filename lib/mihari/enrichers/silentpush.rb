@@ -8,14 +8,16 @@ module Mihari
       # @param [Mihari::Models::Artifact] artifact
       #
       def call(artifact)
-        Mihari.logger.info(artifact.inspect)
+        Mihari.logger.info("artifact : #{artifact.inspect}")
 
         res = case artifact.data_type
         when "domain" then client.query_domain(artifact.data)
         when "ip" then client.query_ipv4(artifact.data)
         end
 
-        res.result&.domain_info.tap do |domain_info|
+        Mihari.logger.info("res : #{res.inspect}")
+
+        res.result.domain_info&.tap do |domain_info|
           if domain_info.registrar != "" && domain_info.whois_created_date != ""
             artifact.whois_record ||= Models::WhoisRecord.new(
               domain: domain_info.domain,
@@ -28,13 +30,25 @@ module Mihari
           end
         end
 
+        res.result.ip2asn.map do |ip2asn|
+          artifact.autonomous_system ||= Models::AutonomousSystem.new(number: ip2asn.asn)
+
+          if !ip2asn.ip_location.nil?
+            artifact.geolocation ||= Models::Geolocation.new(
+              country: ip2asn.ip_location.country_name,
+              country_code: ip2asn.ip_location.country_code,
+              created_at: DateTime.parse(ip2asn.date.to_s)
+            )
+          end
+        end
+
         artifact
       end
 
       private
 
       def callable_relationships?(artifact)
-        artifact.whois_record.nil?
+        artifact.whois_record.nil? || artifact.autonomous_system.nil? || artifact.geolocation.nil?
       end
 
       def supported_data_types

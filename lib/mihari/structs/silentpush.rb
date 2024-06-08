@@ -53,8 +53,6 @@ module Mihari
           # @param [Hash] d
           #
           def from_dynamic!(d)
-            return d if d.nil?
-
             d = Types::Hash[d]
 
             new(
@@ -74,10 +72,66 @@ module Mihari
         end
       end
 
-      class Result < Dry::Struct
-        # @!attribute [r] domain_info
-        #   @return [DomainInfo,nil]
-        attribute :domain_info, DomainInfo.optional
+      class IpLocation < Dry::Struct
+        # @!attribute [r] continent_code
+        #   @return [String]
+        attribute :continent_code, Types::String
+
+        # @!attribute [r] country_code
+        #   @return [String]
+        attribute :country_code, Types::String
+
+        # @!attribute [r] country_is_in_european_union
+        #   @return [Boolean]
+        attribute :country_is_in_european_union, Types::Bool
+
+        # @!attribute [r] country_name
+        #   @return [String]
+        attribute :country_name, Types::String
+
+        class << self
+          #
+          # @param [Hash] d
+          #
+          def from_dynamic!(d)
+            d = Types::Hash[d]
+
+            return nil if d.key?("no_data")
+
+            new(
+              continent_code: d.fetch("continent_code"),
+              country_code: d.fetch("country_code"),
+              country_is_in_european_union: d.fetch("country_is_in_european_union"),
+              country_name: d.fetch("country_name")
+            )
+          end
+        end
+      end
+
+      class ASN < Dry::Struct
+        # @!attribute [r] asn
+        #   @return [Integer]
+        attribute :asn, Types::Int
+
+        # @!attribute [r] asn_allocation_age
+        #   @return [Integer]
+        attribute :asn_allocation_age, Types::Int
+
+        # @!attribute [r] asn_allocation_date
+        #   @return [Integer]
+        attribute :asn_allocation_date, Types::Int
+
+        # @!attribute [r] asn_allocation_date
+        #   @return [String]
+        attribute :asname, Types::String
+
+        # @!attribute [r] ip_location
+        #   @return [IpLocation,nil]
+        attribute? :ip_location, IpLocation.optional
+
+        # @!attribute [r] date
+        #   @return [Integer]
+        attribute :date, Types::Int
 
         class << self
           #
@@ -86,7 +140,35 @@ module Mihari
           def from_dynamic!(d)
             d = Types::Hash[d]
             new(
-              domain_info: DomainInfo.from_dynamic!(d["domaininfo"])
+              asn: d.fetch("asn"),
+              asn_allocation_age: d.fetch("asn_allocation_age"),
+              asn_allocation_date: d.fetch("asn_allocation_date"),
+              asname: d.fetch("asname"),
+              ip_location: IpLocation.from_dynamic!(d.fetch("ip_location")),
+              date: d.fetch("date")
+            )
+          end
+        end
+      end
+
+      class Result < Dry::Struct
+        # @!attribute [r] domain_info
+        #   @return [DomainInfo,nil]
+        attribute? :domain_info, DomainInfo.optional
+
+        # @!attribute [r] ip2asn
+        #   @return [Array<Mihari::Structs::SilentPush::ASN>]
+        attribute :ip2asn, Types.Array(ASN)
+
+        class << self
+          #
+          # @param [Hash] d
+          #
+          def from_dynamic!(d)
+            d = Types::Hash[d]
+            new(
+              domain_info: d["domaininfo"]&.tap { |x| DomainInfo.from_dynamic!(x) },
+              ip2asn: d.fetch("ip2asn", []).map { |x| ASN.from_dynamic!(x) }
             )
           end
         end
@@ -111,7 +193,7 @@ module Mihari
           #
           def from_dynamic!(d)
             d = Types::Hash[d]
-            Mihari.logger.info(d.inspect)
+            Mihari.logger.info("json=#{d.inspect}")
 
             new(
               status_code: d.fetch("status_code"),
