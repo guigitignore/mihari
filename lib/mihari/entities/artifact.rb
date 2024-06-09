@@ -40,6 +40,10 @@ module Mihari
         as: :vulnerabilities do |status, _options|
         status.vulnerabilities.empty? ? nil : status.vulnerabilities
       end
+      expose :certificates, using: Entities::Certificate, documentation: {type: Entities::Certificate, is_array: true, required: false},
+        as: :certificates do |status, _options|
+        status.certificates.empty? ? nil : status.certificates
+      end
     end
 
     class ArtifactsWithPagination < Pagination

@@ -88,6 +88,14 @@ class V7Schema < ActiveRecord::Migration[7.1]
       t.belongs_to :artifact, foreign_key: true, null: false
     end
 
+    create_table :certificates, if_not_exists: true do |t|
+      t.string :domain, null: false
+      t.string :fingerprint_sha1, null: false
+      t.datetime :created_at
+
+      t.belongs_to :artifact, foreign_key: true, null: false
+    end
+
     create_table :tags, if_not_exists: true do |t|
       t.string :name, null: false
       t.datetime :created_at

@@ -101,6 +101,9 @@ module Mihari
       # @!attribute [rw] tags
       #   @return [Array<Mihari::Models::Tag>]
 
+      # @!attribute [rw] certificates
+      #   @return [Array<Mihari::Models::Certificate>]
+
       belongs_to :alert
 
       has_one :autonomous_system, dependent: :destroy
@@ -108,6 +111,7 @@ module Mihari
       has_one :whois_record, dependent: :destroy
       has_one :rule, through: :alert
 
+      has_many :certificates, dependent: :destroy
       has_many :cpes, dependent: :destroy
       has_many :dns_records, dependent: :destroy
       has_many :ports, dependent: :destroy
@@ -132,6 +136,7 @@ module Mihari
         attributes cpe: "cpes.name"
         attributes vuln: "vulnerabilities.name"
         attributes port: "ports.number"
+        attributes certificate: "certificates.domain"
       end
 
       validates_with ArtifactValidator

@@ -212,6 +212,7 @@ require "mihari/models/tag"
 require "mihari/models/tagging"
 require "mihari/models/vulnerability"
 require "mihari/models/whois"
+require "mihari/models/certificate"
 
 # Emitters
 require "mihari/emitters/base"
@@ -337,6 +338,7 @@ require "mihari/entities/reverse_dns"
 require "mihari/entities/tag"
 require "mihari/entities/vulnerability"
 require "mihari/entities/whois"
+require "mihari/entities/certificate"
 
 require "mihari/entities/artifact"
 
