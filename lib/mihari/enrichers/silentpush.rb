@@ -10,13 +10,13 @@ module Mihari
       #
       def parse_scan_data(artifact, scan_data)
         unless scan_data.certificates.empty?
-          artifact.certificates = scan_data.certificates.map do |certificate|
+          artifact.certificates += scan_data.certificates.map do |certificate|
             domains = []
             domains << certificate.domain unless certificate.domain.empty?
             domains += certificate.domains
-            domains << certificate.hostname unless certificate.hostname.nil?
+            domains << certificate.hostname unless certificate.hostname.nil? || certificate.hostname.empty?
 
-            Models::Certificate.new(
+            model = Models::Certificate.new(
               domains: domains.uniq.join(","),
               fingerprint_sha1: certificate.fingerprint_sha1,
               is_expired: certificate.is_expired,
@@ -26,6 +26,9 @@ module Mihari
               not_before: DateTime.parse(certificate.not_before),
               created_at: DateTime.parse(certificate.scan_date)
             )
+
+            model.ip = certificate.ip unless certificate.ip.nil?
+            model
           end
           Mihari.logger.info("artifact certificates #{artifact.certificates.inspect}")
         end
@@ -78,7 +81,7 @@ module Mihari
       private
 
       def callable_relationships?(artifact)
-        artifact.whois_record.nil? || artifact.autonomous_system.nil? || artifact.geolocation.nil? || artifact.certificates.nil?
+        artifact.whois_record.nil? || artifact.autonomous_system.nil? || artifact.geolocation.nil? || artifact.certificates.empty?
       end
 
       def supported_data_types

@@ -83,7 +83,7 @@ module Mihari
 
         # @!attribute [r] domain
         #   @return [String]
-        attribute :domain, Types::String
+        attribute? :domain, Types::String.optional
 
         # @!attribute [r] first_seen
         #   @return [Integer,nil]
@@ -127,7 +127,7 @@ module Mihari
             new(
               age: d["age"],
               age_score: d["age_score"],
-              domain: d.fetch("domain"),
+              domain: d["domain"],
               first_seen: d["first_seen"],
               is_new: d["is_new"],
               is_new_score: d["is_new_score"],

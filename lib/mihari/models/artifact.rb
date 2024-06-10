@@ -133,7 +133,7 @@ module Mihari
         attributes cpe: "cpes.name"
         attributes vuln: "vulnerabilities.name"
         attributes port: "ports.number"
-        #       attributes certificate: "certificates.domains"
+        attributes certificate: "certificates.domains"
       end
 
       validates_with ArtifactValidator
