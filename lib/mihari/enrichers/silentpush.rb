@@ -6,6 +6,33 @@ module Mihari
     class SilentPush < Base
       #
       # @param [Mihari::Models::Artifact] artifact
+      # @param [Mihari::Structs::SilentPush::ScanData] scan_data
+      #
+      def parse_scan_data(artifact, scan_data)
+        unless scan_data.certificates.empty?
+          artifact.certificates = scan_data.certificates.map do |certificate|
+            domains = []
+            domains << certificate.domain unless certificate.domain.empty?
+            domains += certificate.domains
+            domains << certificate.hostname unless certificate.hostname.nil?
+
+            Models::Certificate.new(
+              domains: domains.uniq.join(","),
+              fingerprint_sha1: certificate.fingerprint_sha1,
+              is_expired: certificate.is_expired,
+              issuer_common_name: certificate.issuer_common_name,
+              issuer_organization: certificate.issuer_organization,
+              not_after: DateTime.parse(certificate.not_after),
+              not_before: DateTime.parse(certificate.not_before),
+              created_at: DateTime.parse(certificate.scan_date)
+            )
+          end
+          Mihari.logger.info("artifact certificates #{artifact.certificates.inspect}")
+        end
+      end
+
+      #
+      # @param [Mihari::Models::Artifact] artifact
       #
       def call(artifact)
         Mihari.logger.info("artifact : #{artifact.inspect}")
@@ -18,7 +45,7 @@ module Mihari
         Mihari.logger.info("res : #{res.inspect}")
 
         res.result.domain_info&.tap do |domain_info|
-          if domain_info.registrar != "" && domain_info.whois_created_date != ""
+          unless domain_info.registrar.empty? || domain_info.whois_created_date.empty?
             artifact.whois_record ||= Models::WhoisRecord.new(
               domain: domain_info.domain,
               registrar: {organization: domain_info.registrar},
@@ -30,10 +57,13 @@ module Mihari
           end
         end
 
+        res.result.scan_data&.tap { |x| parse_scan_data(artifact, x) }
+
         res.result.ip2asn.map do |ip2asn|
           artifact.autonomous_system ||= Models::AutonomousSystem.new(number: ip2asn.asn)
+          parse_scan_data(artifact, ip2asn.scan_data)
 
-          if !ip2asn.ip_location.nil?
+          unless ip2asn.ip_location.nil?
             artifact.geolocation ||= Models::Geolocation.new(
               country: ip2asn.ip_location.country_name,
               country_code: ip2asn.ip_location.country_code,
@@ -48,7 +78,7 @@ module Mihari
       private
 
       def callable_relationships?(artifact)
-        artifact.whois_record.nil? || artifact.autonomous_system.nil? || artifact.geolocation.nil?
+        artifact.whois_record.nil? || artifact.autonomous_system.nil? || artifact.geolocation.nil? || artifact.certificates.nil?
       end
 
       def supported_data_types

@@ -83,9 +83,6 @@ module Mihari
       # @!attribute [rw] whois_record
       #   @return [Mihari::Models::WhoisRecord, nil]
 
-      # @!attribute [rw] cpes
-      #   @return [Array<Mihari::Models::CPE>]
-
       # @!attribute [rw] dns_records
       #   @return [Array<Mihari::Models::DnsRecord>]
 
@@ -136,7 +133,7 @@ module Mihari
         attributes cpe: "cpes.name"
         attributes vuln: "vulnerabilities.name"
         attributes port: "ports.number"
-        attributes certificate: "certificates.domain"
+        #       attributes certificate: "certificates.domains"
       end
 
       validates_with ArtifactValidator

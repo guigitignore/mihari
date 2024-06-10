@@ -3,6 +3,75 @@
 module Mihari
   module Structs
     module SilentPush
+      class Certificate < Dry::Struct
+        # @!attribute [r] domain
+        #   @return [String]
+        attribute :domain, Types::String
+
+        # @!attribute [r] domains
+        #   @return [Array<String>]
+        attribute :domains, Types.Array(Types::String)
+
+        # @!attribute [r] fingerprint_sha1
+        #   @return [String]
+        attribute :fingerprint_sha1, Types::String
+
+        # @!attribute [r] ip
+        #   @return [String,nil]
+        attribute? :ip, Types::String.optional
+
+        # @!attribute [r] hostname
+        #   @return [String,nil]
+        attribute? :hostname, Types::String.optional
+
+        # @!attribute [r] is_expired
+        #   @return [Boolean]
+        attribute :is_expired, Types::Bool
+
+        # @!attribute [r] issuer_common_name
+        #   @return [String]
+        attribute :issuer_common_name, Types::String
+
+        # @!attribute [r] issuer_organization
+        #   @return [String]
+        attribute :issuer_organization, Types::String
+
+        # @!attribute [r] not_after
+        #   @return [String]
+        attribute :not_after, Types::String
+
+        # @!attribute [r] not_before
+        #   @return [String]
+        attribute :not_before, Types::String
+
+        # @!attribute [r] scan_date
+        #   @return [String]
+        attribute :scan_date, Types::String
+
+        class << self
+          #
+          # @param [Hash] d
+          #
+          def from_dynamic!(d)
+            d = Types::Hash[d]
+
+            new(
+              domain: d.fetch("domain"),
+              domains: d.fetch("domains"),
+              fingerprint_sha1: d.fetch("fingerprint_sha1"),
+              ip: d["ip"],
+              hostname: d["hostname"],
+              is_expired: d.fetch("is_expired"),
+              issuer_common_name: d.fetch("issuer_common_name"),
+              issuer_organization: d.fetch("issuer_organization"),
+              not_after: d.fetch("not_after"),
+              not_before: d.fetch("not_before"),
+              scan_date: d.fetch("scan_date")
+            )
+          end
+        end
+      end
+
       class DomainInfo < Dry::Struct
         # @!attribute [r] age
         #   @return [Integer,nil]
@@ -108,6 +177,24 @@ module Mihari
         end
       end
 
+      class ScanData < Dry::Struct
+        # @!attribute [r] certificates
+        #   @return [Array<Mihari::Structs::SilentPush::Certificate>]
+        attribute :certificates, Types.Array(Certificate)
+
+        class << self
+          #
+          # @param [Hash] d
+          #
+          def from_dynamic!(d)
+            d = Types::Hash[d]
+            new(
+              certificates: d.fetch("certificates", []).map { |x| Certificate.from_dynamic!(x) }
+            )
+          end
+        end
+      end
+
       class ASN < Dry::Struct
         # @!attribute [r] asn
         #   @return [Integer]
@@ -133,6 +220,10 @@ module Mihari
         #   @return [Integer]
         attribute :date, Types::Int
 
+        # @!attribute [r] scan_data
+        #   @return [Mihari::Structs::SilentPush::ScanData]
+        attribute :scan_data, ScanData
+
         class << self
           #
           # @param [Hash] d
@@ -145,7 +236,8 @@ module Mihari
               asn_allocation_date: d.fetch("asn_allocation_date"),
               asname: d.fetch("asname"),
               ip_location: IpLocation.from_dynamic!(d.fetch("ip_location")),
-              date: d.fetch("date")
+              date: d.fetch("date"),
+              scan_data: ScanData.from_dynamic!(d.fetch("scan_data"))
             )
           end
         end
@@ -160,6 +252,10 @@ module Mihari
         #   @return [Array<Mihari::Structs::SilentPush::ASN>]
         attribute :ip2asn, Types.Array(ASN)
 
+        # @!attribute [r] scan_data
+        #   @return [Mihari::Structs::SilentPush::ScanData,nil]
+        attribute? :scan_data, ScanData.optional
+
         class << self
           #
           # @param [Hash] d
@@ -168,7 +264,8 @@ module Mihari
             d = Types::Hash[d]
             new(
               domain_info: d["domaininfo"]&.tap { |x| DomainInfo.from_dynamic!(x) },
-              ip2asn: d.fetch("ip2asn", []).map { |x| ASN.from_dynamic!(x) }
+              ip2asn: d.fetch("ip2asn", []).map { |x| ASN.from_dynamic!(x) },
+              scan_data: d["scan_data"]&.tap { |x| ScanData.from_dynamic!(x) }
             )
           end
         end
