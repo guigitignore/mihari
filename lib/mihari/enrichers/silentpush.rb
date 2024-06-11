@@ -40,17 +40,14 @@ module Mihari
       def call(artifact)
         Mihari.logger.info("artifact : #{artifact.inspect}")
 
-        res = case artifact.data_type
-        when "domain" then client.query_domain(artifact.data)
-        when "ip" then client.query_ipv4(artifact.data)
-        end
+        res = client.query(artifact.data_type, artifact.data)
 
         Mihari.logger.info("res : #{res.inspect}")
 
         res.result.domain_info&.tap do |domain_info|
-          unless domain_info.registrar.empty? || domain_info.whois_created_date.empty?
+          unless domain_info.registrar.nil? || domain_info.registrar.empty? || domain_info.whois_created_date.nil? || domain_info.whois_created_date.empty?
             artifact.whois_record ||= Models::WhoisRecord.new(
-              domain: domain_info.domain,
+              domain: artifact.data,
               registrar: {organization: domain_info.registrar},
               created_on: Date.parse(domain_info.first_seen&.to_s || DateTime.now.to_s),
               updated_on: Date.parse(domain_info.last_seen&.to_s || DateTime.now.to_s),

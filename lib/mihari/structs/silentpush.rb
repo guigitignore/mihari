@@ -102,20 +102,20 @@ module Mihari
         attribute? :last_seen, Types::Int.optional
 
         # @!attribute [r] query
-        #   @return [String]
-        attribute :query, Types::String
+        #   @return [String,nil]
+        attribute? :query, Types::String.optional
 
         # @!attribute [r] registrar
-        #   @return [String]
-        attribute :registrar, Types::String
+        #   @return [String,nil]
+        attribute? :registrar, Types::String.optional
 
         # @!attribute [r] whois_created_date
-        #   @return [String]
-        attribute :whois_created_date, Types::String
+        #   @return [String,nil]
+        attribute? :whois_created_date, Types::String.optional
 
         # @!attribute [r] zone
         #   @return [String]
-        attribute :zone, Types::String
+        attribute? :zone, Types::String.optional
 
         class << self
           #
@@ -132,10 +132,10 @@ module Mihari
               is_new: d["is_new"],
               is_new_score: d["is_new_score"],
               last_seen: d["last_seen"],
-              query: d.fetch("query"),
-              registrar: d.fetch("registrar"),
-              whois_created_date: d.fetch("whois_created_date"),
-              zone: d.fetch("zone")
+              query: d["query"],
+              registrar: d["registrar"],
+              whois_created_date: d["whois_created_date"],
+              zone: d["zone"]
             )
           end
         end
@@ -189,7 +189,7 @@ module Mihari
           def from_dynamic!(d)
             d = Types::Hash[d]
             new(
-              certificates: d.fetch("certificates", []).map { |x| Certificate.from_dynamic!(x) }
+              certificates: (d["certificates"] || []).map { |x| Certificate.from_dynamic!(x) }
             )
           end
         end
