@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# In this file create differents structures corresponding to the JSON response of SilentPush API
 module Mihari
   module Structs
     module SilentPush

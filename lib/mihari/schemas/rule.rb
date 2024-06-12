@@ -7,6 +7,7 @@ require "mihari/schemas/enricher"
 module Mihari
   module Schemas
     Rule = Dry::Schema.Params do
+      # add a random id if not provided. It allows to quickly test the same rule when we are making tests with a new API
       optional(:id).filled(:string).default(SecureRandom.uuid)
       required(:title).filled(:string)
       required(:description).filled(:string)

@@ -10,6 +10,8 @@ module Mihari
       #
       def parse_scan_data(artifact, scan_data)
         artifact.certificates += scan_data.certificates.map do |certificate|
+          # we gather all domains from different fields into a single array
+          # see https://docs.silentpush.com/enrich.html
           domains = []
           domains << certificate.domain unless certificate.domain.empty?
           domains += certificate.domains
@@ -33,10 +35,14 @@ module Mihari
       # @param [Mihari::Models::Artifact] artifact
       #
       def call(artifact)
+        # actually support only domains and IPv4
         res = client.query(artifact.data_type, artifact.data)
 
         artifact.tap do |tapped|
           res.result.domain_info&.yield_self do |domain_info|
+            # scan_data is not located in the same field depending on data type
+            parse_scan_data(tapped, res.result.scan_data)
+
             unless domain_info.registrar.empty? || domain_info.whois_created_date.empty?
               tapped.whois_record ||= Models::WhoisRecord.new(
                 domain: domain_info.domain,
@@ -48,8 +54,6 @@ module Mihari
               )
             end
           end
-
-          res.result.scan_data&.yield_self { |x| parse_scan_data(tapped, x) }
 
           res.result.ip2asn.map do |ip2asn|
             tapped.autonomous_system ||= Models::AutonomousSystem.new(number: ip2asn.asn)
@@ -68,14 +72,17 @@ module Mihari
 
       private
 
+      # we define here which type of models we can enrich
       def callable_relationships?(artifact)
         artifact.whois_record.nil? || artifact.autonomous_system.nil? || artifact.geolocation.nil? || artifact.certificates.empty?
       end
 
+      # we define here the supported data types supported in input
       def supported_data_types
         %w[domain ip]
       end
 
+      # create a new client instance with API key as argument
       def client
         @client ||= Clients::SilentPush.new(key: Mihari.config.silentpush_api_key)
       end

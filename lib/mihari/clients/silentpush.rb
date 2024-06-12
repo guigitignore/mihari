@@ -21,6 +21,7 @@ module Mihari
       # @param data [String]
       # @return [Structs::SilentPush::Response]
       def query(type, data)
+        # type adjustment -> TODO: sort ipv4 and ipv6
         type += "v4" if type == "ip"
         Structs::SilentPush::Response.from_dynamic! get_json("api/v1/merge-api/explore/enrich/#{type}/#{data}?explain=1&scan_data=1")
       end

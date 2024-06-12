@@ -2,6 +2,7 @@
 
 module Mihari
   module Entities
+    # SilentPush enricher provide certificates so we add it as a new model
     class Certificate < Grape::Entity
       expose :domains, documentation: {type: String, required: true}
       expose :fingerprint_sha1, documentation: {type: String, required: true}
