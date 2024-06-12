@@ -1,0 +1,54 @@
+name: Build and Release Gem
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.0' # specify your Ruby version
+
+    - name: Install dependencies
+      run: bundle install
+
+    - name: Build gem
+      run: bundle exec rake build
+
+    - name: Get gem version
+      id: get_version
+      run: |
+        GEM_FILE=$(ls pkg/*.gem)
+        VERSION=$(echo $GEM_FILE | grep -oP '\d+\.\d+\.\d+')
+        echo "GEM_FILE=$GEM_FILE" >> $GITHUB_ENV
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: "v${{ env.VERSION }}"
+        release_name: "Release v${{ env.VERSION }}"
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ env.GEM_FILE }}
+        asset_name: $(basename ${{ env.GEM_FILE }})
+        asset_content_type: application/x-ruby
