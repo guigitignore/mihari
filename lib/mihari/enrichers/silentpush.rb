@@ -15,10 +15,6 @@ module Mihari
           domains += certificate.domains
           domains << certificate.hostname unless certificate.hostname.nil? || certificate.hostname.empty?
 
-          Mihari.logger.info("scan date=#{certificate.scan_date.inspect}")
-          Mihari.logger.info("not after=#{certificate.not_after.inspect}")
-          Mihari.logger.info("not before=#{certificate.not_before.inspect}")
-
           Models::Certificate.new(
             domains: domains.uniq.join(","),
             fingerprint_sha1: certificate.fingerprint_sha1,
@@ -44,7 +40,7 @@ module Mihari
             unless domain_info.registrar.empty? || domain_info.whois_created_date.empty?
               tapped.whois_record ||= Models::WhoisRecord.new(
                 domain: domain_info.domain,
-                registrar: {organization: domain_info.registrar},
+                registrar: {name: domain_info.registrar},
                 created_on: Date.parse(domain_info.first_seen&.to_s || DateTime.now.to_s),
                 updated_on: Date.parse(domain_info.last_seen&.to_s || DateTime.now.to_s),
                 contacts: {},

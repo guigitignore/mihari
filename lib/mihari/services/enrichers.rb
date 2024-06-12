@@ -14,7 +14,8 @@ module Mihari
           :dns_records,
           :reverse_dns_names,
           :cpes,
-          :ports
+          :ports,
+          :certificates
         ).find(id)
 
         raise UnenrichableError.new, "#{artifact.id} is already enriched or unenrichable" unless artifact.enrichable?

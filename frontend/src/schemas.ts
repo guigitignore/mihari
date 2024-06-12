@@ -65,6 +65,18 @@ export const CpeSchema = z.object({
   name: z.string()
 })
 
+export const CertificateSchema = z.object({
+  domains: z.string(),
+  fingerprint_sha1: z.string(),
+  ip: z.string().nullish(),
+  is_expired: z.boolean(),
+  issuer_common_name: z.string(),
+  issuer_organization: z.string(),
+  not_before: z.string().nullish(),
+  not_after: z.string().nullish(),
+  createdAt: z.string()
+})
+
 export const VulnerabilitySchema = z.object({
   name: z.string()
 })
@@ -87,6 +99,7 @@ export const ArtifactSchema = z.object({
   dnsRecords: z.array(DnsRecordSchema).nullish(),
   reverseDnsNames: z.array(ReverseDnsNameSchema).nullish(),
   cpes: z.array(CpeSchema).nullish(),
+  certificates: z.array(CertificateSchema).nullish(),
   ports: z.array(PortSchema).nullish(),
   vulnerabilities: z.array(VulnerabilitySchema).nullish(),
   tags: z.array(TagSchema)
@@ -205,6 +218,7 @@ export type AutonomousSystemType = z.infer<typeof AutonomousSystemSchema>
 export type GeolocationType = z.infer<typeof GeolocationSchema>
 export type ReverseDnsNameType = z.infer<typeof ReverseDnsNameSchema>
 export type CpeType = z.infer<typeof CpeSchema>
+export type CertificateType = z.infer<typeof CertificateSchema>
 export type VulnerabilityType = z.infer<typeof VulnerabilitySchema>
 export type PortType = z.infer<typeof PortSchema>
 export type ArtifactType = z.infer<typeof ArtifactSchema>

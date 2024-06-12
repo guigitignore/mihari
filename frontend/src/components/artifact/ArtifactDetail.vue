@@ -6,6 +6,7 @@ import { computed, onMounted, type PropType, ref } from "vue"
 import { generateGetIPTask } from "@/api-helper"
 import ActionButtons from "@/components/artifact/ActionButtons.vue"
 import AS from "@/components/artifact/AsItem.vue"
+import Certificates from "@/components/artifact/CertificatesItem.vue"
 import CPEs from "@/components/artifact/CpesItem.vue"
 import DnsRecords from "@/components/artifact/DnsRecordsItem.vue"
 import Ports from "@/components/artifact/PortsItem.vue"
@@ -189,6 +190,10 @@ onMounted(async () => {
     <div class="block" v-if="artifact.cpes">
       <h4 class="is-size-4 mb-2">CPEs</h4>
       <CPEs :cpes="artifact.cpes" />
+    </div>
+    <div class="block" v-if="artifact.certificates">
+      <h4 class="is-size-4 mb-2">Certificates</h4>
+      <Certificates :certificates="artifact.certificates" />
     </div>
     <div class="block" v-if="artifact.vulnerabilities">
       <h4 class="is-size-4 mb-2">Vulnerabilities</h4>
