@@ -95,8 +95,8 @@ class V7Schema < ActiveRecord::Migration[7.1]
       t.boolean :is_expired, null: false
       t.string :issuer_common_name, null: false
       t.string :issuer_organization, null: false
-      t.datetime :not_after, null: false
-      t.datetime :not_before, null: false
+      t.datetime :not_after, null: true
+      t.datetime :not_before, null: true
       t.datetime :created_at
 
       t.belongs_to :artifact, foreign_key: true, null: false

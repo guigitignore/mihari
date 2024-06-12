@@ -83,7 +83,7 @@ module Mihari
 
         # @!attribute [r] domain
         #   @return [String]
-        attribute? :domain, Types::String.optional
+        attribute :domain, Types::String
 
         # @!attribute [r] first_seen
         #   @return [Integer,nil]
@@ -102,20 +102,20 @@ module Mihari
         attribute? :last_seen, Types::Int.optional
 
         # @!attribute [r] query
-        #   @return [String,nil]
-        attribute? :query, Types::String.optional
+        #   @return [String]
+        attribute :query, Types::String
 
         # @!attribute [r] registrar
-        #   @return [String,nil]
-        attribute? :registrar, Types::String.optional
+        #   @return [String]
+        attribute :registrar, Types::String
 
         # @!attribute [r] whois_created_date
-        #   @return [String,nil]
-        attribute? :whois_created_date, Types::String.optional
+        #   @return [String]
+        attribute :whois_created_date, Types::String
 
         # @!attribute [r] zone
         #   @return [String]
-        attribute? :zone, Types::String.optional
+        attribute :zone, Types::String
 
         class << self
           #
@@ -127,15 +127,15 @@ module Mihari
             new(
               age: d["age"],
               age_score: d["age_score"],
-              domain: d["domain"],
+              domain: d.fetch("domain"),
               first_seen: d["first_seen"],
               is_new: d["is_new"],
               is_new_score: d["is_new_score"],
               last_seen: d["last_seen"],
-              query: d["query"],
-              registrar: d["registrar"],
-              whois_created_date: d["whois_created_date"],
-              zone: d["zone"]
+              query: d.fetch("query"),
+              registrar: d.fetch("registrar"),
+              whois_created_date: d.fetch("whois_created_date"),
+              zone: d.fetch("zone")
             )
           end
         end
@@ -183,13 +183,13 @@ module Mihari
         attribute :certificates, Types.Array(Certificate)
 
         class << self
-          #
           # @param [Hash] d
           #
           def from_dynamic!(d)
             d = Types::Hash[d]
+
             new(
-              certificates: (d["certificates"] || []).map { |x| Certificate.from_dynamic!(x) }
+              certificates: d.fetch("certificates").map { |x| Certificate.from_dynamic!(x) }
             )
           end
         end
@@ -263,9 +263,9 @@ module Mihari
           def from_dynamic!(d)
             d = Types::Hash[d]
             new(
-              domain_info: d["domaininfo"]&.tap { |x| DomainInfo.from_dynamic!(x) },
+              domain_info: d["domaininfo"]&.yield_self { |x| DomainInfo.from_dynamic!(x) },
               ip2asn: d.fetch("ip2asn", []).map { |x| ASN.from_dynamic!(x) },
-              scan_data: d["scan_data"]&.tap { |x| ScanData.from_dynamic!(x) }
+              scan_data: d["scan_data"]&.yield_self { |x| ScanData.from_dynamic!(x) }
             )
           end
         end
@@ -290,7 +290,6 @@ module Mihari
           #
           def from_dynamic!(d)
             d = Types::Hash[d]
-            Mihari.logger.info("json=#{d.inspect}")
 
             new(
               status_code: d.fetch("status_code"),

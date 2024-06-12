@@ -9,28 +9,27 @@ module Mihari
       # @param [Mihari::Structs::SilentPush::ScanData] scan_data
       #
       def parse_scan_data(artifact, scan_data)
-        unless scan_data.certificates.empty?
-          artifact.certificates += scan_data.certificates.map do |certificate|
-            domains = []
-            domains << certificate.domain unless certificate.domain.empty?
-            domains += certificate.domains
-            domains << certificate.hostname unless certificate.hostname.nil? || certificate.hostname.empty?
+        artifact.certificates += scan_data.certificates.map do |certificate|
+          domains = []
+          domains << certificate.domain unless certificate.domain.empty?
+          domains += certificate.domains
+          domains << certificate.hostname unless certificate.hostname.nil? || certificate.hostname.empty?
 
-            model = Models::Certificate.new(
-              domains: domains.uniq.join(","),
-              fingerprint_sha1: certificate.fingerprint_sha1,
-              is_expired: certificate.is_expired,
-              issuer_common_name: certificate.issuer_common_name,
-              issuer_organization: certificate.issuer_organization,
-              not_after: DateTime.parse(certificate.not_after),
-              not_before: DateTime.parse(certificate.not_before),
-              created_at: DateTime.parse(certificate.scan_date)
-            )
+          Mihari.logger.info("scan date=#{certificate.scan_date.inspect}")
+          Mihari.logger.info("not after=#{certificate.not_after.inspect}")
+          Mihari.logger.info("not before=#{certificate.not_before.inspect}")
 
-            model.ip = certificate.ip unless certificate.ip.nil?
-            model
-          end
-          Mihari.logger.info("artifact certificates #{artifact.certificates.inspect}")
+          Models::Certificate.new(
+            domains: domains.uniq.join(","),
+            fingerprint_sha1: certificate.fingerprint_sha1,
+            ip: certificate.ip,
+            is_expired: certificate.is_expired,
+            issuer_common_name: certificate.issuer_common_name,
+            issuer_organization: certificate.issuer_organization,
+            not_after: certificate.not_after.empty? ? nil : DateTime.parse(certificate.not_after),
+            not_before: certificate.not_before.empty? ? nil : DateTime.parse(certificate.not_before),
+            created_at: DateTime.parse(certificate.scan_date)
+          )
         end
       end
 
@@ -38,41 +37,37 @@ module Mihari
       # @param [Mihari::Models::Artifact] artifact
       #
       def call(artifact)
-        Mihari.logger.info("artifact : #{artifact.inspect}")
-
         res = client.query(artifact.data_type, artifact.data)
 
-        Mihari.logger.info("res : #{res.inspect}")
+        artifact.tap do |tapped|
+          res.result.domain_info&.yield_self do |domain_info|
+            unless domain_info.registrar.empty? || domain_info.whois_created_date.empty?
+              tapped.whois_record ||= Models::WhoisRecord.new(
+                domain: domain_info.domain,
+                registrar: {organization: domain_info.registrar},
+                created_on: Date.parse(domain_info.first_seen&.to_s || DateTime.now.to_s),
+                updated_on: Date.parse(domain_info.last_seen&.to_s || DateTime.now.to_s),
+                contacts: {},
+                created_at: DateTime.parse(domain_info.whois_created_date)
+              )
+            end
+          end
 
-        res.result.domain_info&.tap do |domain_info|
-          unless domain_info.registrar.nil? || domain_info.registrar.empty? || domain_info.whois_created_date.nil? || domain_info.whois_created_date.empty?
-            artifact.whois_record ||= Models::WhoisRecord.new(
-              domain: artifact.data,
-              registrar: {organization: domain_info.registrar},
-              created_on: Date.parse(domain_info.first_seen&.to_s || DateTime.now.to_s),
-              updated_on: Date.parse(domain_info.last_seen&.to_s || DateTime.now.to_s),
-              contacts: {},
-              created_at: DateTime.parse(domain_info.whois_created_date)
-            )
+          res.result.scan_data&.yield_self { |x| parse_scan_data(tapped, x) }
+
+          res.result.ip2asn.map do |ip2asn|
+            tapped.autonomous_system ||= Models::AutonomousSystem.new(number: ip2asn.asn)
+            parse_scan_data(tapped, ip2asn.scan_data)
+
+            unless ip2asn.ip_location.nil?
+              tapped.geolocation ||= Models::Geolocation.new(
+                country: ip2asn.ip_location.country_name,
+                country_code: ip2asn.ip_location.country_code,
+                created_at: DateTime.parse(ip2asn.date.to_s)
+              )
+            end
           end
         end
-
-        res.result.scan_data&.tap { |x| parse_scan_data(artifact, x) }
-
-        res.result.ip2asn.map do |ip2asn|
-          artifact.autonomous_system ||= Models::AutonomousSystem.new(number: ip2asn.asn)
-          parse_scan_data(artifact, ip2asn.scan_data)
-
-          unless ip2asn.ip_location.nil?
-            artifact.geolocation ||= Models::Geolocation.new(
-              country: ip2asn.ip_location.country_name,
-              country_code: ip2asn.ip_location.country_code,
-              created_at: DateTime.parse(ip2asn.date.to_s)
-            )
-          end
-        end
-
-        artifact
       end
 
       private

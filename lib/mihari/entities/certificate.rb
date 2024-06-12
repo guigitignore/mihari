@@ -9,8 +9,8 @@ module Mihari
       expose :is_expired, documentation: {type: Grape::API::Boolean, required: true}
       expose :issuer_common_name, documentation: {type: String, required: true}
       expose :issuer_organization, documentation: {type: String, required: true}
-      expose :not_after, documentation: {type: DateTime, required: true}
-      expose :not_before, documentation: {type: DateTime, required: true}
+      expose :not_after, documentation: {type: DateTime, required: false}
+      expose :not_before, documentation: {type: DateTime, required: false}
       expose :created_at, documentation: {type: DateTime, required: true}, as: :createdAt
     end
   end
